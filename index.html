@@ -35,7 +35,8 @@ function submitImage() {
     "- nome", "- cognome", "- data di nascita", "- luogo di nascita",
     "- provincia di nascita", "- codice fiscale", "- via", "- civico",
     "- città", "- cap", "- provincia", "- telefono", "- cellulare", "- email",
-    "", "Restituisci un URL precompilato per questo modulo: https://form.jotform.com/251236867972065",
+    "",
+    "Restituisci un URL precompilato per questo modulo: https://form.jotform.com/251236867972065",
     "Usa questi parametri: nome23, scriviUna24, dataDi18, luogoDi, provinciaNascita, codiceFiscale, via, civico, citta, cap, provincia, telefono, cellulare, email.",
     "Rispondi solo con l'URL precompilato, senza altro testo."
   ].join("\n");
@@ -81,6 +82,7 @@ function submitImage() {
       resultDiv.innerHTML = '❌ Errore durante l'invio: ' + err.message;
     }
   };
+
   reader.readAsDataURL(file);
 }
 </script>
