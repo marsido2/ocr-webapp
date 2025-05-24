@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Segreteria OCR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    input, button { margin-top: 1em; font-size: 1em; }
+    #loading { display: none; margin-top: 1em; }
+    #result { margin-top: 2em; font-weight: bold; color: #b00; }
+  </style>
+</head>
+<body>
+  <h2>Scatta o carica la foto della scheda</h2>
+  <input type="file" id="imageInput" accept="image/*"><br>
+  <button onclick="submitImage()">Invia</button>
+  <div id="loading">Elaborazione in corso...</div>
+  <div id="result"></div>
+
+<script>
+function submitImage() {
+  const input = document.getElementById('imageInput');
+  const file = input.files[0];
+  const resultDiv = document.getElementById('result');
+  const loadingDiv = document.getElementById('loading');
+  resultDiv.innerHTML = '';
+  if (!file) {
+    alert('Seleziona una foto prima di inviare.');
+    return;
+  }
+
+  const promptText = [
+    "Questa è una scheda d'iscrizione. Estrai i seguenti campi:",
+    "- nome", "- cognome", "- data di nascita", "- luogo di nascita",
+    "- provincia di nascita", "- codice fiscale", "- via", "- civico",
+    "- città", "- cap", "- provincia", "- telefono", "- cellulare", "- email",
+    "", "Restituisci un URL precompilato per questo modulo: https://form.jotform.com/251236867972065",
+    "Usa questi parametri: nome23, scriviUna24, dataDi18, luogoDi, provinciaNascita, codiceFiscale, via, civico, citta, cap, provincia, telefono, cellulare, email.",
+    "Rispondi solo con l'URL precompilato, senza altro testo."
+  ].join("\n");
+
+  const reader = new FileReader();
+  reader.onloadend = async () => {
+    loadingDiv.style.display = 'block';
+    const base64Image = reader.result.split(',')[1];
+
+    const body = {
+      model: "gpt-4-vision-preview",
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: promptText },
+          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
+        ]
+      }],
+      max_tokens: 1000
+    };
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sk-proj-INSERISCI-LA-TUA-CHIAVE"
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+      loadingDiv.style.display = 'none';
+
+      if (data?.choices?.[0]?.message?.content) {
+        const output = data.choices[0].message.content;
+        resultDiv.innerHTML = `<p style="color:green;">✅ <a href="${output}" target="_blank">Apri il modulo precompilato</a></p>`;
+      } else {
+        resultDiv.innerHTML = '❌ Nessuna risposta valida. Verifica il contenuto dell'immagine.';
+      }
+    } catch (err) {
+      loadingDiv.style.display = 'none';
+      resultDiv.innerHTML = '❌ Errore durante l'invio: ' + err.message;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
